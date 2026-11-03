@@ -1,0 +1,23 @@
+name: 'GhostTrace AI'
+description: 'Predicts hidden, indirect consequences of a pull request and comments a risk briefing.'
+branding: { icon: 'search', color: 'purple' }
+inputs:
+  anthropic-api-key: { description: 'Optional. Enables the AI-written narrative.', required: false }
+  fail-on-score: { description: 'Fail the check if risk score >= this value (0 = never fail).', default: '0' }
+  github-token: { description: 'Token used to post the PR comment.', default: '${{ github.token }}' }
+runs:
+  using: composite
+  steps:
+    - id: analyze
+      shell: bash
+      env: { ANTHROPIC_API_KEY: '${{ inputs.anthropic-api-key }}' }
+      run: |
+        AI=""; [ -n "$ANTHROPIC_API_KEY" ] && AI="--ai"
+        python3 "${{ github.action_path }}/ghosttrace.py" analyze . --base "origin/${{ github.base_ref }}" --out ghosttrace-report.md $AI
+    - shell: bash
+      env: { GH_TOKEN: '${{ inputs.github-token }}' }
+      run: gh pr comment "${{ github.event.pull_request.number }}" --body-file ghosttrace-report.md --edit-last --create-if-none
+    - shell: bash
+      run: |
+        T="${{ inputs.fail-on-score }}"; S="${{ steps.analyze.outputs.score }}"
+        if [ "$T" -gt 0 ] && [ "$S" -ge "$T" ]; then echo "GhostTrace risk $S >= $T"; exit 1; fi

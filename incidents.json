@@ -1,0 +1,10 @@
+[
+  {"id": "INC-142", "date": "2025-03-11",
+   "title": "Nightly reconcile overran its window and blocked morning settlement",
+   "root_cause": "timeout raised without re-checking batch duration",
+   "files": ["jobs/nightly_reconcile.py"], "keywords": ["timeout", "PAYMENT_TIMEOUT"]},
+  {"id": "INC-207", "date": "2025-08-02",
+   "title": "Weekly finance report returned empty after a column rename",
+   "root_cause": "SQL report still used the old column name",
+   "files": ["reports/weekly_report.sql"], "keywords": ["customer_email", "column"]}
+]
